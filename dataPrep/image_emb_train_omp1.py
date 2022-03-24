@@ -28,9 +28,6 @@ if __name__ == '__main__':
     r = np.random.randint(0, img_size-patch_size+1, num_patches)
     c = np.random.randint(0, img_size-patch_size+1, num_patches)
     
-    r_all = np.array([np.arange(start=r1,stop=r1+patch_size) for r1 in r])
-    c_all = np.array([np.arange(start=c1,stop=c1+patch_size) for c1 in c])
-
     imgs = x_train[p_imgs,:].reshape((num_patches, img_size, img_size, 3))
     patches = np.zeros((num_patches,patch_size*patch_size*3))
     for i in range(num_patches):

@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 
 
-CONFIG_FILE_NAME = '..\\config.json'
+CONFIG_FILE_NAME = 'config.json'
  
 if __name__ == '__main__':
     # read configuration
@@ -28,6 +28,10 @@ if __name__ == '__main__':
     file_name = config['DATASET']['imgs_path']+"\\train_data.pkl"
     with open(file_name, 'wb') as f:
         pickle.dump(data, f)
+    file_name = config['DATASET']['imgs_path']+"\\train_labels.pkl"
+    with open(file_name, 'wb') as f:
+        pickle.dump(labels, f)
+    
 
 
      
