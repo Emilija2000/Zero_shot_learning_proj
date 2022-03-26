@@ -1,4 +1,5 @@
 import json
+import numpy as np
 import pickle
 from torch.utils.data import DataLoader
 
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     file_path_data = config['DATASET']['imgs_path']+"\\train_data.pkl"
     file_path_labels = config['DATASET']['imgs_path']+"\\train_labels.pkl"
     
-    b_size=8 #RAM limit
+    b_size=16 
     dataset = ImageDataset(file_path_data, file_path_labels, transf_wh, transf_m, in_channels, img_size, patch_size, stride, padding)
     dataloader = DataLoader(dataset, batch_size=b_size, shuffle=False)
 
@@ -53,24 +54,24 @@ if __name__ == '__main__':
         curr_data_batch = j
         data_batch_size = dataset.__len__()//5
 
-        embeddings = []
+        embeddings = np.zeros((data_batch_size,12800), dtype=np.float32)
 
         for i,(data,labels) in enumerate(dataloader):
-            if(i<(curr_data_batch-1)*data_batch_size):
+            if(i*b_size<(curr_data_batch-1)*data_batch_size):
                 continue
-            if(i>curr_data_batch*data_batch_size):
+            if(i*b_size  >=curr_data_batch*data_batch_size):
                 break
 
-            if(i%500==0):
-                print("Extracted {}/{}".format(i-(curr_data_batch-1)*data_batch_size,data_batch_size))
+            if(i*b_size%1000==0):
+                print("Extracted {}/{}".format(i*b_size-(curr_data_batch-1)*data_batch_size,data_batch_size))
             
-            out=model(data)
+            out=model(data).detach().numpy()
 
-            if(b_size>1):
-                embeddings =embeddings + out.tolist() 
+            if(b_size==1):
+                embeddings[i*b_size-(curr_data_batch-1)*data_batch_size,:] = out 
             else:
-                embeddings.append(out.tolist())
-                        
+                embeddings[i*b_size-(curr_data_batch-1)*data_batch_size:i*b_size-(curr_data_batch-1)*data_batch_size+b_size,:] = out
+
         print('Saving batch ',curr_data_batch)
         file_path = config['DATASET']["imgs_ftrs_path"]+"\\image_embs_omp1t_batch"+str(curr_data_batch)+".pkl"
         with open(file_path, 'wb') as f:

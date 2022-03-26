@@ -44,7 +44,6 @@ class OmpT(nn.Module):
         ftrs_pos = self.pool(ftrs_pos)
         ftrs_neg = self.pool(ftrs_neg)
 
-
         # final embedding - return flattened vector
         if(len(X.shape)==3):
             emb = torch.cat((ftrs_pos.flatten(), ftrs_neg.flatten()))
