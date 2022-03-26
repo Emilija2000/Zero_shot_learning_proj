@@ -47,12 +47,16 @@ class ImageDataset(Dataset):
         
         # normalize individual patches
         num_patches = patches.shape[0]
+        
         std = torch.std(patches,1).reshape(num_patches,1)
         std[std==0] = 1
         patches = torch.divide((patches - torch.mean(patches,1).reshape(num_patches,1)),std)
 
         # zca whitening of image patches
         patches = torch.matmul(patches-self.transf_m,self.transf)
+
+        # transform to allow batch operations - one channel
+        patches = patches.reshape((1,patches.shape[0], patches.shape[1]))
 
         return [patches, self.labels[idx]]
         

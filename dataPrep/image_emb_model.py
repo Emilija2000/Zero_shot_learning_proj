@@ -7,16 +7,17 @@ class OmpT(nn.Module):
     def __init__(self, out_channels=1600, out_img_size = 27, pretrained=False, weights=[], alpha=0.25, pool_param=8):
         super(OmpT, self).__init__()
 
-        #self.conv = nn.Conv2d(in_channels, out_channels, patch_size, stride=stride, padding=padding, bias=False)
+        # self.conv = nn.Conv2d(in_channels, out_channels, patch_size, stride=stride, padding=padding, bias=False)
+        # note: using conv does not allow individual patch preprocessing
 
         # load pretrained dictionary
         if pretrained:
             if len(weights)>0:
-                self.weights = torch.from_numpy(weights).float()
-
+                self.weights = torch.from_numpy(weights).T.float()
+                self.weights = self.weights.reshape((1,1,self.weights.shape[0],self.weights.shape[1]))
             else:
                 ('Please provide weights of the pretrained network...')
-        self.shape = [out_channels, out_img_size, out_img_size]
+        self.shape = [-1, out_channels, out_img_size, out_img_size]
         
         # soft threshold value
         self.activation = nn.Softshrink(alpha)
@@ -27,7 +28,7 @@ class OmpT(nn.Module):
  
     def forward(self, X):
         # apply dictionary on image patches
-        X = torch.matmul(self.weights,X.T)
+        X = torch.matmul(X,self.weights)
 
         # reshape into [out_channels, out_img_size, out_img_size]
         X = X.reshape(self.shape)
