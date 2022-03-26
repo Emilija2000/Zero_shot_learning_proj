@@ -1,0 +1,27 @@
+{
+    "DATASET":{
+        "imgs_batches_path": "..\\dataset\\imageData\\images\\cifar-10-python",
+        "imgs_path":"..\\dataset\\imageData\\images",
+        "imgs_ftrs_path": "..\\dataset\\imageData\\features",
+        "imgs_size":32,
+        "imgs_batch_size":10000,
+        "imgs_batch_num":5
+    },
+    "IMAGE_EMB":{
+        "encoders":{
+            "omp1-t":{
+                "num_training_patches":400000,
+                "batch_size":1000,
+                "num_iter":50,
+                "ftrs_size":1600,
+                "patch_size":6,
+                "stride":1,
+                "padding":0,
+                "pooling":13,
+                "alpha": 0.25
+            }
+        },
+        
+        "encoder":"omp1-t"
+    }
+}
