@@ -17,7 +17,7 @@ if __name__ == '__main__':
     data = np.zeros((batch_size*batch_num,3*config['DATASET']['imgs_size']**2))
     labels = np.zeros((batch_size*batch_num,))
 
-    for i in range(1,batch_num):
+    for i in range(1,batch_num+1):
         file_name = config['DATASET']['imgs_batches_path']+"\\data_batch_"+str(i)   
         with open(file_name, 'rb') as f:
             data_dict = pickle.load(f, encoding='bytes')

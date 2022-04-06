@@ -78,6 +78,11 @@ if __name__ == '__main__':
             
             # update dictionary
             dict_temp = dict_temp + np.matmul(x_sparse,data)
+        
+        # reinit empty clusters
+        ind = np.sum(dict_temp*dict_temp,1) < 0.001
+        newinit = np.random.randn(ftrs_size,patch_size*patch_size*3)
+        dict_temp[ind,:] = newinit[ind,:]
 
         dictionary = dict_temp
         dictionary = np.divide(dictionary,np.sqrt(np.sum(dictionary*dictionary,1)+1e-20).reshape(-1,1))
