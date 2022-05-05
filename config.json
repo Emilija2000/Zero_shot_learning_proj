@@ -1,11 +1,24 @@
 {
     "DATASET":{
-        "imgs_batches_path": "..\\dataset\\imageData\\images\\cifar-10-python",
-        "imgs_path":"..\\dataset\\imageData\\images",
-        "imgs_ftrs_path": "..\\dataset\\imageData\\features",
-        "imgs_size":32,
-        "imgs_batch_size":10000,
-        "imgs_batch_num":5
+        "IMAGES":{
+            "imgs_batches_path": "..\\dataset\\imageData\\images\\cifar-10-python",
+            "imgs_path":"..\\dataset\\imageData\\images",
+            "imgs_ftrs_path": "..\\dataset\\imageData\\features",
+            "imgs_ftrs_filename":"image_embs_omp1t",
+            "imgs_size":32,
+            "imgs_batch_size":10000,
+            "imgs_batch_num":5
+        },
+        "WORDS":{
+            "word_ftrs_path_original": "..\\dataset\\wordData\\release",
+            "word_ftrs_file_name_original": "wordreps_orig.mat",
+            "word_ftrs_var_name_original": "oWe",
+            "word_vocab_file_name_original": "vocab.mat",
+            "word_vocab_var_name_original":"vocab",
+            "word_ftrs_path": "..\\dataset\\wordData\\word_embs.pkl"
+        },
+        "classes":["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
+        "unseen":["cat","truck"]
     },
     "IMAGE_EMB":{
         "encoders":{
@@ -21,7 +34,9 @@
                 "alpha": 0.25
             }
         },
-        
         "encoder":"omp1-t"
+    },
+    "WORD_EMB":{
+        "ftrs_size": 50
     }
 }
