@@ -1,17 +1,15 @@
-import json
 import numpy as np
-import pickle
 from torch.utils.data import DataLoader
+import os
 
 from image_dataset import ImageDataset
 from image_emb_model import OmpT
 
-CONFIG_FILE_NAME = 'config.json'
- 
+import data_utils
+
 if __name__ == '__main__':
     # read configuration
-    with open(CONFIG_FILE_NAME) as config_file:
-        config = json.load(config_file)
+    config = data_utils.load_config()
 
     in_channels = 3
     out_channels = config['IMAGE_EMB']['encoders']['omp1-t']['ftrs_size']
@@ -25,9 +23,8 @@ if __name__ == '__main__':
     out_img_size = 1+(img_size-patch_size+2*padding)//stride
 
     # load pretrained model parameters 
-    file_path = config['DATASET']['imgs_path']+"\\dict.pkl"
-    with open(file_path, 'rb') as f:
-        weights,transf_m,transf_wh = pickle.load(f, encoding='bytes')       
+    file_path = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"dict.pkl")
+    weights,transf_m,transf_wh = data_utils.load_data(file_path)       
 
 
     # init model
@@ -40,8 +37,8 @@ if __name__ == '__main__':
 
 
     # read training data
-    file_path_data = config['DATASET']['imgs_path']+"\\train_data.pkl"
-    file_path_labels = config['DATASET']['imgs_path']+"\\train_labels.pkl"
+    file_path_data = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"train_data.pkl")
+    file_path_labels = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"train_labels.pkl")
     
     b_size=16 
     dataset = ImageDataset(file_path_data, file_path_labels, transf_wh, transf_m, in_channels, img_size, patch_size, stride, padding)
@@ -49,7 +46,7 @@ if __name__ == '__main__':
 
 
     print('Extracting image embeddings...')
-    for j in range(1,6):
+    for j in range(1,config['DATASET']['IMAGES']['imgs_batch_num']+1):
         print('Batch ',j,':')
         curr_data_batch = j
         data_batch_size = dataset.__len__()//5
@@ -73,7 +70,7 @@ if __name__ == '__main__':
                 embeddings[i*b_size-(curr_data_batch-1)*data_batch_size:i*b_size-(curr_data_batch-1)*data_batch_size+b_size,:] = out
 
         print('Saving batch ',curr_data_batch)
-        file_path = config['DATASET']["imgs_ftrs_path"]+"\\image_embs_omp1t_batch"+str(curr_data_batch)+".pkl"
-        with open(file_path, 'wb') as f:
-            pickle.dump(embeddings, f)
+        file_path = os.path.join(config['DATASET']['IMAGES']["imgs_ftrs_path"],
+            config['DATASET']['IMAGES']['imgs_ftrs_filename']+"_batch"+str(curr_data_batch)+".pkl")
+        data_utils.save_data(file_path,embeddings)
 

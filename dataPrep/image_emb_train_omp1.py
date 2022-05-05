@@ -1,22 +1,17 @@
-import json
 import numpy as np
-import pickle
+import os
 
-CONFIG_FILE_NAME = 'config.json'
+import data_utils
 np.random.seed(43)
  
 if __name__ == '__main__':
     # read configuration
-    with open(CONFIG_FILE_NAME) as config_file:
-        config = json.load(config_file)
-
+    config = data_utils.load_config()
 
     # read training data
     print('Preparing training images...')
-    file_name = config['DATASET']['imgs_path']+"\\train_data.pkl"
-    with open(file_name, 'rb') as f:
-        x_train = pickle.load(f, encoding='bytes')
-
+    file_name = os.path.join(config['DATASET']['imgs_path']+"train_data.pkl")
+    x_train = data_utils.load_data(file_name)
 
     # extract random image patches for dictionary training
     print('Preparing dictionary training patches...')
@@ -34,7 +29,7 @@ if __name__ == '__main__':
     for i in range(num_patches):
         patch = imgs[i,:,r[i]:r[i]+patch_size,c[i]:c[i]+patch_size]
         patches[i,:] = patch.flatten()
-        
+      
     # normalization
     std = np.std(patches,1).reshape(num_patches,1)
     std[std==0] = 1
@@ -59,7 +54,7 @@ if __name__ == '__main__':
     dictionary = np.random.randn(ftrs_size,patch_size*patch_size*3) #random init
     # normalize dict
     dictionary = np.divide(dictionary,np.sqrt(np.sum(dictionary*dictionary,1)+1e-20).reshape(-1,1))
-
+    
 
     for i in range(num_iter):
         dict_temp = np.zeros(dictionary.shape)
@@ -92,6 +87,6 @@ if __name__ == '__main__':
 
     # save dict
     print('Saving image dictionary...')
-    file_name = config['DATASET']['imgs_path']+"\\dict.pkl"
-    with open(file_name, 'wb') as f:
-        pickle.dump((dictionary, m, transf),f)
+    file_name = os.path.join(config['DATASET']['imgs_path'],"dict.pkl")
+    data_utils.save_data(file_name, (dictionary,m,transf))
+    

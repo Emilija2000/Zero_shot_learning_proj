@@ -1,20 +1,19 @@
-import pickle
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
+
+from data_utils import load_data
 
 class ImageDataset(Dataset):
     # load the dataset
     def __init__(self, path_data, path_labels, transf_wh, transf_m, ch = 3, img_size=32, patch_size=6, stride=1, padding=0):
 
-        with open(path_data, 'rb') as f:
-            data = pickle.load(f, encoding='bytes')
+        data = load_data(path_data)
 
         data = data.reshape((-1,ch,img_size,img_size))
         self.data = torch.from_numpy(data)
 
-        with open(path_labels, 'rb') as f:
-            self.labels = pickle.load(f, encoding='bytes')
+        self.labels = load_data(path_labels)
 
         self.patch_size=patch_size
         self.img_size=img_size

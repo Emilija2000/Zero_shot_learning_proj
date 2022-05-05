@@ -17,7 +17,7 @@ class OmpT(nn.Module):
                 self.weights = self.weights.reshape((1,1,self.weights.shape[0],self.weights.shape[1]))
             else:
                 ('Please provide weights of the pretrained network...')
-        self.shape = [-1, out_channels, out_img_size, out_img_size]
+        self.shape = [-1, 2*out_channels, out_img_size, out_img_size]
         
         # soft threshold value
         self.activation = nn.Softshrink(alpha)
@@ -30,9 +30,6 @@ class OmpT(nn.Module):
         # apply dictionary on image patches
         X = torch.matmul(X,self.weights)
 
-        # reshape into [out_channels, out_img_size, out_img_size]
-        X = X.reshape(self.shape)
-
         # soft threshold
         X = self.activation(X)
 
@@ -40,14 +37,18 @@ class OmpT(nn.Module):
         ftrs_pos = X * (X>=0)
         ftrs_neg = X * (X<0)
 
-        # average pooling
-        ftrs_pos = self.pool(ftrs_pos)
-        ftrs_neg = self.pool(ftrs_neg)
-
-        # final embedding - return flattened vector
+        # concat and reshape into [batch_size, out_channels, out_img_size, out_img_size]
         if(len(X.shape)==3):
-            emb = torch.cat((ftrs_pos.flatten(), ftrs_neg.flatten()))
+            emb = torch.cat((ftrs_pos, ftrs_neg),dim=2).transpose(1,2)
         else:
-            emb = torch.cat((ftrs_pos.reshape(ftrs_pos.shape[0],-1),ftrs_neg.reshape(ftrs_neg.shape[0],-1)), 1)
+            emb = torch.cat((ftrs_pos, ftrs_neg),dim=3).transpose(2,3)
+        emb = emb.reshape(self.shape)
+
+        # average pooling
+        emb = self.pool(emb)
+        
+        # final embedding - return flattened vector
+        emb = emb.reshape((emb.shape[0],-1))
+
         return emb
 
