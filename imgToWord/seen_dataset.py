@@ -13,6 +13,7 @@ class ImgWordEmbDataset(Dataset):
 
         # load all files
         x = data_utils.load_image_embeddings(img_emb_path, img_emb_filename, img_batch_num)
+        x = x.astype(np.float32)
 
         self.img_labels = data_utils.load_data(img_emb_labels)
         self.img_labels = self.img_labels.astype(int)
@@ -24,7 +25,7 @@ class ImgWordEmbDataset(Dataset):
         self.img_data = x[ind,:]
 
         # match image label and word representation
-        self.word_data = data_utils.load_data(word_emb_path)
+        self.word_data = data_utils.load_data(word_emb_path).astype(np.float32)
             
         self.labels = self.word_data[self.img_labels,:]
 
@@ -35,6 +36,9 @@ class ImgWordEmbDataset(Dataset):
         data = torch.from_numpy(self.img_data[idx,:])
         label = torch.from_numpy(self.labels[idx])
         return data,label
+
+    def ftrs_size(self):
+        return len(self.img_data[0,:])
 
 
 

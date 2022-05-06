@@ -38,5 +38,14 @@
     },
     "WORD_EMB":{
         "ftrs_size": 50
+    },
+    "MAPPING":{
+        "hidden_size":50,
+        "num_epochs":10,
+        "lr":0.05,
+        "max_iter":20,
+        "tolerance_grad":1e-5,
+        "tolerance_change":1e-9,
+        "batch_size":100
     }
 }
