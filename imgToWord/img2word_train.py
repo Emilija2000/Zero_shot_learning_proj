@@ -7,7 +7,7 @@ import sys
 sys.path.append('./dataPrep')
 from data_utils import load_config
 
-from img2word_dataset import ImgWordEmbDatasetSeen
+from img2word_dataset import ImgWordEmbDataset
 from img2word_model import Img2WordModel
 
 torch.manual_seed(1)
@@ -26,7 +26,7 @@ if __name__=='__main__':
 
     # load dataset
     batch_size = config['MAPPING']['batch_size']
-    dataset = ImgWordEmbDatasetSeen(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
+    dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
 
     # train test val split
     total_count = dataset.__len__()
@@ -36,10 +36,11 @@ if __name__=='__main__':
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, (train_count, valid_count, test_count),generator=torch.Generator().manual_seed(42))
 
     dataloader = {'train':DataLoader(train_dataset, batch_size=train_dataset.__len__()),
-        'val':DataLoader(val_dataset, batch_size=val_dataset.__len__()), 'test':DataLoader(test_dataset, batch_size)}
+        'val':DataLoader(val_dataset, batch_size=max(val_dataset.__len__(),batch_size)), 'test':DataLoader(test_dataset, batch_size)}
+    do_val = (val_dataset.__len__()>0)
 
     # initialize the model
-    in_features = dataset.ftrs_size()
+    in_features = config['IMAGE_EMB']['ftrs_size']
     out_features = config['WORD_EMB']['ftrs_size']
     hidden_size = config['MAPPING']['hidden_size']
     model = Img2WordModel(in_features,out_features,hidden_size)
@@ -95,19 +96,23 @@ if __name__=='__main__':
             if phase == 'train':
                 train_loss.append(running_loss)
             else:
-                val_loss.append(running_loss)
+                if(do_val):
+                    val_loss.append(running_loss)
+                    print('Iter {}: train loss {}, val loss {}'.format(i, train_loss[-1], val_loss[-1]))
+                else:
+                    print('Iter {}: train loss {}'.format(i, train_loss[-1]))
         
-        print('Iter {}: train loss {}, val loss {}'.format(i, train_loss[-1], val_loss[-1]))
-
                     
     # visualize training
     import matplotlib.pyplot as plt
 
     plt.figure()
     plt.plot(train_loss,'b-')
-    plt.plot(val_loss,'r-')
+    if do_val:
+        plt.plot(val_loss,'r-')
     plt.show()
 
     # save model
     model = model.to('cpu')
-    torch.save(model.state_dict(), 'img2w_state_dict.pkl')
+    file_name = config['MAPPING']['pretrained_model_name']
+    torch.save(model.state_dict(), file_name)

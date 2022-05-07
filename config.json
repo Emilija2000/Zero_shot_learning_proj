@@ -17,6 +17,10 @@
             "word_vocab_var_name_original":"vocab",
             "word_ftrs_path": "..\\dataset\\wordData\\word_embs.pkl"
         },
+        "SEMANTIC":{
+            "train_ftrs_path": "..\\dataset\\semanticData\\train_ftrs.pkl",
+            "test_ftrs_path": "..\\dataset\\semanticData\\test_ftrs.pkl"
+        },
         "classes":["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
         "unseen":["cat","truck"]
     },
@@ -34,18 +38,20 @@
                 "alpha": 0.25
             }
         },
-        "encoder":"omp1-t"
+        "encoder":"omp1-t",
+        "ftrs_size":12800
     },
     "WORD_EMB":{
         "ftrs_size": 50
     },
     "MAPPING":{
-        "hidden_size":50,
-        "num_epochs":10,
-        "lr":0.05,
+        "hidden_size":70,
+        "num_epochs":30,
+        "lr":0.25,
         "max_iter":20,
         "tolerance_grad":1e-5,
         "tolerance_change":1e-9,
-        "batch_size":100
+        "batch_size":1000,
+        "pretrained_model_name": "img2w_state_dict.pkl"
     }
 }

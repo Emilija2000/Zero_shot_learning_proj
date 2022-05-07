@@ -7,12 +7,12 @@ import sys
 sys.path.append('./dataPrep')
 import data_utils
 
-class ImgWordEmbDatasetSeen(Dataset):
+class ImgWordEmbDataset(Dataset):
     # load the dataset
-    def __init__(self, img_emb_path, img_emb_filename, img_batch_num, img_emb_labels, word_emb_path, classes, unseen):
+    def __init__(self, img_emb_path, img_emb_filename, img_batch_num, img_emb_labels, word_emb_path, classes, unseen, test=False):
 
         # load all files
-        x = data_utils.load_image_embeddings(img_emb_path, img_emb_filename, img_batch_num)
+        x = data_utils.load_image_embeddings(img_emb_path, img_emb_filename, img_batch_num, train=not(test))
         x = x.astype(np.float32)
 
         self.img_labels = data_utils.load_data(img_emb_labels)
@@ -20,7 +20,8 @@ class ImgWordEmbDatasetSeen(Dataset):
 
         # eliminate unseen classes
         uns = np.where(np.in1d(classes,unseen))
-        ind = 1-np.in1d(self.img_labels, uns)
+        ind = np.in1d(self.img_labels, uns)
+        ind = np.logical_xor(True, ind)
         self.img_labels = self.img_labels[ind]
         self.img_data = x[ind,:]
 
@@ -41,7 +42,6 @@ class ImgWordEmbDatasetSeen(Dataset):
         return len(self.img_data[0,:])
 
 
-
 if __name__ == '__main__':
 
     config = data_utils.load_config()
@@ -54,6 +54,7 @@ if __name__ == '__main__':
     classes = config['DATASET']['classes']
     unseen = config['DATASET']['unseen']
 
-    dt = ImgWordEmbDatasetSeen(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
+    dt = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
 
     print(dt[0])
+    print(dt.__len__())
