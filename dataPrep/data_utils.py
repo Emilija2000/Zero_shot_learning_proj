@@ -19,15 +19,21 @@ def save_data(path, data):
     with open(path, 'wb') as f:
         pickle.dump(data, f)
 
-def load_image_embeddings(img_emb_path, img_emb_filename, img_batch_num):
-    x = []
-    for i in range(1,img_batch_num+1):
-        file_path = os.path.join(img_emb_path, img_emb_filename+"_batch"+str(i)+".pkl")
+def load_image_embeddings(img_emb_path, img_emb_filename, img_batch_num, train=True):
+    if train:
+        x = []
+        for i in range(1,img_batch_num+1):
+            file_path = os.path.join(img_emb_path, img_emb_filename+"_batch"+str(i)+".pkl")
+            with open(file_path, 'rb') as f:
+                d = pickle.load(f, encoding='bytes')
+                if(len(x)==0):
+                    x = d
+                else:
+                    x = np.concatenate((x,d))
+    else:
+        file_path = os.path.join(img_emb_path, img_emb_filename+"_test.pkl")
         with open(file_path, 'rb') as f:
-            d = pickle.load(f, encoding='bytes')
-            if(len(x)==0):
-                x = d
-            else:
-                x = np.concatenate((x,d))
+            x = pickle.load(f, encoding='bytes')
+                
     x = np.float64(x)
     return x
