@@ -1,4 +1,3 @@
-from numpy import save
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -8,8 +7,8 @@ import sys
 sys.path.append('./dataPrep')
 from data_utils import load_config
 
-from seen_dataset import ImgWordEmbDataset
-from seen_model import Img2WordModel
+from img2word_dataset import ImgWordEmbDatasetSeen
+from img2word_model import Img2WordModel
 
 torch.manual_seed(1)
 
@@ -27,14 +26,14 @@ if __name__=='__main__':
 
     # load dataset
     batch_size = config['MAPPING']['batch_size']
-    dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
+    dataset = ImgWordEmbDatasetSeen(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
 
     # train test val split
     total_count = dataset.__len__()
-    train_count = int(0.9 * total_count) 
-    valid_count = int(0.1 * total_count)
+    train_count = int(0.8 * total_count) 
+    valid_count = int(0.2 * total_count)
     test_count = total_count - train_count - valid_count
-    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, (train_count, valid_count, test_count))
+    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, (train_count, valid_count, test_count),generator=torch.Generator().manual_seed(42))
 
     dataloader = {'train':DataLoader(train_dataset, batch_size=train_dataset.__len__()),
         'val':DataLoader(val_dataset, batch_size=val_dataset.__len__()), 'test':DataLoader(test_dataset, batch_size)}

@@ -7,7 +7,7 @@ import sys
 sys.path.append('./dataPrep')
 import data_utils
 
-class ImgWordEmbDataset(Dataset):
+class ImgWordEmbDatasetSeen(Dataset):
     # load the dataset
     def __init__(self, img_emb_path, img_emb_filename, img_batch_num, img_emb_labels, word_emb_path, classes, unseen):
 
@@ -54,6 +54,6 @@ if __name__ == '__main__':
     classes = config['DATASET']['classes']
     unseen = config['DATASET']['unseen']
 
-    dt = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
+    dt = ImgWordEmbDatasetSeen(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
 
     print(dt[0])
