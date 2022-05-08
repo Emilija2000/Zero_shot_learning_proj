@@ -90,8 +90,10 @@ if __name__=='__main__':
 
                 # calculate the loss for monitoring
                 model.eval()
-                loss = loss_closure()
-                running_loss += loss.item()
+                with torch.no_grad():
+                    out = model(data)
+                    loss = loss_fcn(out, labels)
+                    running_loss += loss.item()
 
             if phase == 'train':
                 train_loss.append(running_loss)

@@ -19,7 +19,8 @@
         },
         "SEMANTIC":{
             "train_ftrs_path": "..\\dataset\\semanticData\\train_ftrs.pkl",
-            "test_ftrs_path": "..\\dataset\\semanticData\\test_ftrs.pkl"
+            "test_ftrs_path": "..\\dataset\\semanticData\\test_ftrs.pkl",
+            "train_labels_path": "..\\dataset\\semanticData\\train_labels.pkl"
         },
         "classes":["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
         "unseen":["cat","truck"]
@@ -53,5 +54,12 @@
         "tolerance_change":1e-9,
         "batch_size":1000,
         "pretrained_model_name": "img2w_state_dict.pkl"
+    },
+    "CLASSIFIER":{
+        "batch_size": 1024,
+        "lr": 0.0002,
+        "weight_decay":0.001,
+        "num_epochs":1000,
+        "model_path": "supervised_classif_dict.pkl"
     }
 }

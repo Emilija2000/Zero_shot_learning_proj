@@ -62,8 +62,11 @@ if __name__ == '__main__':
     # save extracted features
     print("Saving feature vectors...")
     file_name = config['DATASET']['SEMANTIC']['train_ftrs_path']
-    data_utils.save_data(file_name, train_ftrs)
+    data_utils.save_data(file_name, train_ftrs.detach().numpy())
     
     file_name = config['DATASET']['SEMANTIC']['test_ftrs_path']
-    data_utils.save_data(file_name, test_ftrs)
+    data_utils.save_data(file_name, test_ftrs.detach().numpy())
     
+    # save train labels without the unseen classes
+    file_name = config['DATASET']['SEMANTIC']['train_labels_path']
+    data_utils.save_data(file_name, train_dataset.img_labels)
