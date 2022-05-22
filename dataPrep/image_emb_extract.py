@@ -25,7 +25,7 @@ if __name__ == '__main__':
     emb_size = config['IMAGE_EMB']['ftrs_size'] = 12800
 
     # load pretrained model parameters 
-    file_path = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"dict.pkl")
+    file_path = os.path.join(config['DATASET']['IMAGES']['imgs_path'],config['IMAGE_EMB']['dict_file_name'])
     weights,transf_m,transf_wh = data_utils.load_data(file_path)       
 
 
@@ -47,34 +47,37 @@ if __name__ == '__main__':
 
 
     print('Extracting image embeddings...')
-    for j in range(1,config['DATASET']['IMAGES']['imgs_batch_num']+1):
-        print('Batch ',j,':')
-        curr_data_batch = j
-        data_batch_size = dataset.__len__()//5
+    data_batch_size = dataset.__len__()//5
+    curr_data_batch = 1
+    embeddings = np.zeros((data_batch_size,emb_size), dtype=np.float32)
+    print('Batch ',curr_data_batch,':')
 
-        embeddings = np.zeros((data_batch_size,emb_size), dtype=np.float32)
+    for i,(data,labels) in enumerate(dataloader):
+        if(i*b_size>=curr_data_batch*data_batch_size):
+            print('Saving batch ',curr_data_batch)
+            file_path = os.path.join(config['DATASET']['IMAGES']["imgs_ftrs_path"],
+                config['DATASET']['IMAGES']['imgs_ftrs_filename']+"_batch"+str(curr_data_batch)+".pkl")
+            data_utils.save_data(file_path,embeddings)
 
-        for i,(data,labels) in enumerate(dataloader):
-            if(i*b_size<(curr_data_batch-1)*data_batch_size):
-                continue
-            if(i*b_size  >=curr_data_batch*data_batch_size):
+            curr_data_batch = curr_data_batch + 1
+            if(curr_data_batch>config['DATASET']['IMAGES']['imgs_batch_num']):
                 break
+            print('Batch ',curr_data_batch,':')
 
-            if(i*b_size%1000==0):
-                print("Extracted {}/{}".format(i*b_size-(curr_data_batch-1)*data_batch_size,data_batch_size))
+        if(i*b_size%2000==0):
+            print("Extracted {}/{}".format(i*b_size-(curr_data_batch-1)*data_batch_size,data_batch_size))
             
-            out=model(data).detach().numpy()
-
-            if(b_size==1):
-                embeddings[i*b_size-(curr_data_batch-1)*data_batch_size,:] = out 
-            else:
-                embeddings[i*b_size-(curr_data_batch-1)*data_batch_size:i*b_size-(curr_data_batch-1)*data_batch_size+b_size,:] = out
-
-        print('Saving batch ',curr_data_batch)
-        file_path = os.path.join(config['DATASET']['IMAGES']["imgs_ftrs_path"],
-            config['DATASET']['IMAGES']['imgs_ftrs_filename']+"_batch"+str(curr_data_batch)+".pkl")
-        data_utils.save_data(file_path,embeddings)
+        out=model(data).detach().numpy()
+        if(b_size==1):
+            embeddings[i*b_size-(curr_data_batch-1)*data_batch_size,:] = out 
+        else:
+            embeddings[i*b_size-(curr_data_batch-1)*data_batch_size:i*b_size-(curr_data_batch-1)*data_batch_size+b_size,:] = out
     
+    print('Saving batch ',curr_data_batch)
+    file_path = os.path.join(config['DATASET']['IMAGES']["imgs_ftrs_path"],
+        config['DATASET']['IMAGES']['imgs_ftrs_filename']+"_batch"+str(curr_data_batch)+".pkl")
+    data_utils.save_data(file_path,embeddings)
+
     # read test data
     file_path_data = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"test_data.pkl")
     file_path_labels = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"test_labels.pkl")

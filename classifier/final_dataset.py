@@ -17,7 +17,7 @@ class SemanticSpaceDataset(Dataset):
         self.data = data_utils.load_data(data_path)
 
         self.labels = data_utils.load_data(labels_path)
-        #self.labels = self.labels.astype(int)
+        self.labels = self.labels.astype(int)
 
         # match image label and word representation
         word_data = data_utils.load_data(word_emb_path).astype(np.float32)
@@ -44,6 +44,41 @@ class SemanticSpaceDataset(Dataset):
     
     def get_label(self, label_idx):
         return self.unique_labels[label_idx]
+
+
+class AllFtrsDataset(Dataset):
+    # load the dataset
+    def __init__(self, image_ftrs_path, semantic_ftrs_path, labels_path, word_emb_path, unseen_classes):
+        
+        # load all files
+        self.imgs = data_utils.load_data(image_ftrs_path)
+
+        self.semantic = data_utils.load_data(semantic_ftrs_path)
+
+        self.labels = data_utils.load_data(labels_path)
+        self.labels = self.labels.astype(int)
+
+        # match image label and word representation
+        self.word_data = data_utils.load_data(word_emb_path).astype(np.float32)
+        self.word_emb_labels = self.word_data[self.labels,:]
+
+        #self.labels = torch.from_numpy(self.labels).to(torch.long)
+
+        max_label = np.max(self.labels)
+        self.sup_labels = [i for i in range(max_label+1) if not(i in unseen_classes)]
+        self.sup_labels = np.array(self.sup_labels)
+
+    def __len__(self):
+        return len(self.labels)
+  
+    def __getitem__(self, idx):
+        img = torch.from_numpy(self.imgs[idx,:])
+        sem = torch.from_numpy(self.semantic[idx,:])
+        label = self.labels[idx]
+        return img,sem,label
+    
+    def get_label(self, label_idx):
+        return self.sup_labels[label_idx]
 
 if __name__ == '__main__':
 

@@ -21,15 +21,19 @@ if __name__ == '__main__':
 
     # load image embedding datasets
     batch_size = config['MAPPING']['batch_size']
-
+    
     classes = config['DATASET']['classes']
     unseen = config['DATASET']['unseen'] # train images from unseen classes are not used
-    train_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     
-    unseen = [] # extract for all test classes (including novelty classes)
+    train_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
+    
+    # extract for all test classes (including novelty classes)
+    unseen = []
     img_label_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"], "test_labels.pkl")
     test_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, 0, img_label_path, word_ftrs_path, classes, unseen, test=True)
+    
+    # init dataloaders
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # load a pretrained model
@@ -41,23 +45,24 @@ if __name__ == '__main__':
     file_name = config['MAPPING']['pretrained_model_name']
     model.load_state_dict(torch.load(file_name))
     model.eval()
-
+    
     # prepare final feature vectors
     len_train = train_dataset.__len__()
     len_test = test_dataset.__len__()
     train_ftrs = torch.zeros((len_train,out_features))
     test_ftrs = torch.zeros((len_test,out_features))
-
+    
     # extract feature vectors in the word vector space
     print('Extracting train feature vectors...')
     for i, (data, labels) in enumerate(train_dataloader):
         out = model(data)
         train_ftrs[i*batch_size:min((i+1)*batch_size, len_train), :] = out
-
+    
     print('Extracting test feature vectors...')
     for i, (data, labels) in enumerate(test_dataloader):
         out = model(data)
         test_ftrs[i*batch_size:min((i+1)*batch_size, len_test), :] = out
+
 
     # save extracted features
     print("Saving feature vectors...")
@@ -65,8 +70,39 @@ if __name__ == '__main__':
     data_utils.save_data(file_name, train_ftrs.detach().numpy())
     
     file_name = config['DATASET']['SEMANTIC']['test_ftrs_path']
+    #file_name = config['DATASET']['SEMANTIC']['test_ftrs_unseen_path']
     data_utils.save_data(file_name, test_ftrs.detach().numpy())
     
-    # save train labels without the unseen classes
+    
+    # save labels without the unseen classes
     file_name = config['DATASET']['SEMANTIC']['train_labels_path']
     data_utils.save_data(file_name, train_dataset.img_labels)
+    
+    file_name = config['DATASET']['SEMANTIC']['test_labels_path']
+    #file_name = config['DATASET']['SEMANTIC']['test_labels_unseen_path']
+    data_utils.save_data(file_name, test_dataset.img_labels)
+    
+    
+    # ADDITIONAL SAVING FORMATS
+    # save original dataset in image space without the unseen classes
+    file_name = config['DATASET']['IMAGES']['imgs_seen_ftrs_train_path']
+    data_utils.save_data(file_name, train_dataset.img_data)
+    
+    unseen = config['DATASET']['unseen'] # reload test dataset without the unseen classes
+    img_label_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"], "test_labels.pkl")
+    test_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, 0, img_label_path, word_ftrs_path, classes, unseen, test=True)
+    file_name = config['DATASET']['IMAGES']['imgs_seen_ftrs_test_path']
+    data_utils.save_data(file_name, test_dataset.img_data)
+
+    # save original dataset in image space with all classes
+    unseen = []
+    img_label_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"], "train_labels.pkl")
+    train_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, img_batch_num, img_label_path, word_ftrs_path, classes, unseen)
+    file_name = config['DATASET']['IMAGES']['imgs_10cls_ftrs_train_path']
+    data_utils.save_data(file_name, train_dataset.img_data)
+    
+    img_label_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"], "test_labels.pkl")
+    test_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, 0, img_label_path, word_ftrs_path, classes, unseen, test=True)
+    file_name = config['DATASET']['IMAGES']['imgs_10cls_ftrs_test_path']
+    data_utils.save_data(file_name, test_dataset.img_data)
+    

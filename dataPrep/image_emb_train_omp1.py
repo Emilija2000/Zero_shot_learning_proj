@@ -2,22 +2,25 @@ import numpy as np
 import os
 
 import data_utils
-np.random.seed(43)
+
+#bio ovaj seed 1 u ovim trenutnim rezultatima
  
 if __name__ == '__main__':
     # read configuration
     config = data_utils.load_config()
 
+    np.random.seed(config['IMAGE_EMB']['random_seed'])
+
     # read training data
     print('Preparing training images...')
-    file_name = os.path.join(config['DATASET']['imgs_path']+"train_data.pkl")
+    file_name = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"train_data.pkl")
     x_train = data_utils.load_data(file_name)
 
     # extract random image patches for dictionary training
     print('Preparing dictionary training patches...')
     num_patches = config['IMAGE_EMB']['encoders']['omp1-t']['num_training_patches']
     patch_size = config['IMAGE_EMB']['encoders']['omp1-t']['patch_size']
-    img_size = config['DATASET']['imgs_size']
+    img_size = config['DATASET']['IMAGES']['imgs_size']
     
     p_imgs = np.random.randint(0, x_train.shape[0], num_patches)
     r = np.random.randint(0, img_size-patch_size+1, num_patches)
@@ -87,6 +90,6 @@ if __name__ == '__main__':
 
     # save dict
     print('Saving image dictionary...')
-    file_name = os.path.join(config['DATASET']['imgs_path'],"dict.pkl")
+    file_name = os.path.join(config['DATASET']['IMAGES']['imgs_path'],config['IMAGE_EMB']['dict_file_name'])
     data_utils.save_data(file_name, (dictionary,m,transf))
     

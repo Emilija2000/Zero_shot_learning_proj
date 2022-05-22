@@ -9,15 +9,23 @@ from data_utils import load_config
 from final_dataset import SemanticSpaceDataset
 from supervised_model import SupervisedModel
 
-torch.manual_seed(43) #42 je teži validacioni mng??
+
 
 if __name__=='__main__':
 
     config = load_config()
 
+    torch.manual_seed(config['CLASSIFIER']['random_seed']) 
+
     # load dataset
-    train_data_path = config['DATASET']['SEMANTIC']['train_ftrs_path']
-    train_labels_path = config['DATASET']['SEMANTIC']['train_labels_path']
+     # to test projection into semantic space 
+    #train_data_path = config['DATASET']['SEMANTIC']['train_ftrs_path']
+     # to train supervised image classifier based on image features
+    #train_data_path = config['DATASET']['IMAGES']['imgs_seen_ftrs_train_path']
+    #train_labels_path = config['DATASET']['SEMANTIC']['train_labels_path']
+    train_data_path = config['DATASET']['IMAGES']['imgs_10cls_ftrs_train_path'] 
+    import os
+    train_labels_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"],"train_labels.pkl")
     word_embs_path = config['DATASET']['WORDS']['word_ftrs_path']
 
     dataset = SemanticSpaceDataset(train_data_path, train_labels_path, word_embs_path)
@@ -30,13 +38,21 @@ if __name__=='__main__':
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, (train_count, valid_count, test_count))
 
     batch_size = config['CLASSIFIER']['batch_size']
-    dataloader = {'train':DataLoader(train_dataset, shuffle=True, batch_size=train_count),
-        'val':DataLoader(val_dataset, batch_size=valid_count)}
+    #dataloader = {'train':DataLoader(train_dataset, shuffle=True, batch_size=train_count),
+    #    'val':DataLoader(val_dataset, batch_size=valid_count)}
+    dataloader = {'train':DataLoader(train_dataset, shuffle=True, batch_size=batch_size),
+        'val':DataLoader(val_dataset, batch_size=batch_size)}
+
 
     # initialize the model
-    in_features = config['WORD_EMB']['ftrs_size']
-    out_features = len(config['DATASET']['classes']) - len(config['DATASET']['unseen'])
+    #in_features = config['WORD_EMB']['ftrs_size'] # for semantic space vectors testing
+    in_features = config['IMAGE_EMB']['ftrs_size'] # for image space vectors testing
+    #out_features = len(config['DATASET']['classes']) - len(config['DATASET']['unseen'])
+    out_features=len(config['DATASET']['classes'])
     model = SupervisedModel(in_features,out_features)
+
+    #file_name = config['CLASSIFIER']['model_path']
+    #model.load_state_dict(torch.load(file_name))
 
     # device
     if torch.cuda.is_available():
@@ -51,8 +67,8 @@ if __name__=='__main__':
     weight_decay = config['CLASSIFIER']['weight_decay']
     
     loss_fcn = nn.CrossEntropyLoss(reduction='mean')
-    #optimizer = torch.optim.Adam(model.parameters(),lr, weight_decay=weight_decay)
-    optimizer = torch.optim.LBFGS(model.parameters(),lr)
+    optimizer = torch.optim.Adam(model.parameters(),lr, weight_decay=weight_decay)
+    #optimizer = torch.optim.LBFGS(model.parameters(),lr)
    
    
     # train
@@ -61,16 +77,19 @@ if __name__=='__main__':
     train_acc = []
     val_acc = []
 
+    best_acc = 0
+    best_model = model.state_dict()
+    
     for i in range(num_epochs):
         for phase in ['train','val']:
             correct = 0.0
             all = 0.0
             running_loss = 0.0
 
-            for _,(data,labels) in enumerate(dataloader[phase]):
+            for this_batch_size,(data,labels) in enumerate(dataloader[phase]):
                 data = data.to(device)
                 labels = labels.to(device)
-                '''
+                
                 optimizer.zero_grad()      
                 
                 # main training step
@@ -95,6 +114,7 @@ if __name__=='__main__':
 
                         correct += torch.sum(torch.eq(torch.argmax(out, 1), labels))
                         all += out.shape[0]
+                
                 '''
                 def loss_closure():
                     optimizer.zero_grad()
@@ -117,9 +137,11 @@ if __name__=='__main__':
 
                     correct += torch.sum(torch.eq(torch.argmax(out, 1), labels))
                     all += out.shape[0]
-
+                '''
+                
                 running_loss += loss.item()
 
+            running_loss = running_loss/this_batch_size# for mini-batch
             if phase == 'train':
                 train_loss.append(running_loss)
                 acc = correct/all
@@ -128,6 +150,10 @@ if __name__=='__main__':
                 val_loss.append(running_loss)
                 acc = correct/all
                 val_acc.append(acc.item())
+
+                if(acc.item()>best_acc):
+                    best_acc = acc.item()
+                    best_model = model.state_dict()
 
         print('Iter {}:\ntrain loss {}, val loss {}, \ntrain acc {}, val acc {}'.format(i, train_loss[-1], val_loss[-1], train_acc[-1], val_acc[-1]))
               
@@ -144,17 +170,28 @@ if __name__=='__main__':
     ax[1].set_title('Accuracy')
     plt.show()
 
+    model.load_state_dict(best_model)
     # save model
     model = model.to('cpu')
     file_name = config['CLASSIFIER']['model_path']
     torch.save(model.state_dict(), file_name)
+    '''
+    model = model.to('cpu')
+    file_name = config['CLASSIFIER']['model_path']
+    model.load_state_dict(torch.load(file_name))
+    '''
+    model.eval()
+    
+    predictions = []   
+    labels_all = []
+    for i,(data,labels) in enumerate(dataloader['val']):
+        with torch.no_grad():
+            out = model(data)
+            predictions = predictions + (torch.argmax(out, 1).detach().tolist())
+            labels_all = labels_all + labels.tolist()
+
 
     from sklearn.metrics import classification_report
-
-    for i, (data,labels) in enumerate(dataloader['val']):
-        out = model(data)
-        out = torch.argmax(out, 1)
-
-        print(classification_report(labels, out.detach().numpy()))
+    print(classification_report(labels_all, predictions))
 
     

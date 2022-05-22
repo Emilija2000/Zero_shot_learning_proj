@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # load data
     x = data_utils.load_image_embeddings(config['DATASET']['IMAGES']["imgs_ftrs_path"], config['DATASET']['IMAGES']['imgs_ftrs_filename'], config['DATASET']['IMAGES']['imgs_batch_num'])
 
-    path_labels = os.path.join(config['DATASET']['imgs_path'],"train_labels.pkl")
+    path_labels = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"train_labels.pkl")
     y = data_utils.load_data(path_labels)
     
     # split to train and test

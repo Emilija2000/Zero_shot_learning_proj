@@ -5,6 +5,10 @@
             "imgs_path":"..\\dataset\\imageData\\images",
             "imgs_ftrs_path": "..\\dataset\\imageData\\features",
             "imgs_ftrs_filename":"image_embs_omp1t",
+            "imgs_seen_ftrs_train_path": "..\\dataset\\imageData\\features\\train_ftrs_img_seen.pkl",
+            "imgs_seen_ftrs_test_path": "..\\dataset\\imageData\\features\\test_ftrs_img_seen.pkl",
+            "imgs_10cls_ftrs_train_path":"..\\dataset\\imageData\\features\\train_ftrs_img_10cls.pkl",
+            "imgs_10cls_ftrs_test_path":"..\\dataset\\imageData\\features\\test_ftrs_img_10cls.pkl",
             "imgs_size":32,
             "imgs_batch_size":10000,
             "imgs_batch_num":5
@@ -20,7 +24,10 @@
         "SEMANTIC":{
             "train_ftrs_path": "..\\dataset\\semanticData\\train_ftrs.pkl",
             "test_ftrs_path": "..\\dataset\\semanticData\\test_ftrs.pkl",
-            "train_labels_path": "..\\dataset\\semanticData\\train_labels.pkl"
+            "train_labels_path": "..\\dataset\\semanticData\\train_labels.pkl",
+            "test_labels_path": "..\\dataset\\semanticData\\test_labels.pkl",
+            "test_ftrs_unseen_path": "..\\dataset\\semanticData\\test_ftrs_unseen.pkl",
+            "test_labels_unseen_path": "..\\dataset\\semanticData\\test_labels_unseen.pkl"
         },
         "classes":["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
         "unseen":["cat","truck"]
@@ -40,7 +47,9 @@
             }
         },
         "encoder":"omp1-t",
-        "ftrs_size":12800
+        "ftrs_size":12800,
+        "random_seed":42,
+        "dict_file_name":"dict.pkl"
     },
     "WORD_EMB":{
         "ftrs_size": 50
@@ -56,10 +65,16 @@
         "pretrained_model_name": "img2w_state_dict.pkl"
     },
     "CLASSIFIER":{
-        "batch_size": 1024,
+        "random_seed": 42,
+        "batch_size": 64,
         "lr": 0.0002,
-        "weight_decay":0.001,
-        "num_epochs":1000,
-        "model_path": "supervised_classif_dict.pkl"
+        "weight_decay":0.00005,
+        "num_epochs":2500,
+        "model_path": "supervised_classif_imgemb_dict.pkl",
+        "uns_k": 20,
+        "uns_lambda":3,
+        "uns_sample_size":1000,
+        "uns_model_path":"unsupervised_classif.pkl",
+        "thresholds_num":10
     }
 }

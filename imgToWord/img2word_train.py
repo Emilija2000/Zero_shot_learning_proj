@@ -112,6 +112,9 @@ if __name__=='__main__':
     plt.plot(train_loss,'b-')
     if do_val:
         plt.plot(val_loss,'r-')
+        plt.legend(['train loss', 'validation loss'])
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
     plt.show()
 
     # save model
