@@ -46,7 +46,6 @@ if __name__=='__main__':
 
     uns_means = dataset.word_data[np.array(unseen_inds)]
 
-
     # test for different thresholds for unsupervised classification
     thresh_num = config['CLASSIFIER']['thresholds_num']
     thresholds = np.linspace(0,1,thresh_num)
@@ -65,12 +64,14 @@ if __name__=='__main__':
         predictions = []  
         
         for i,(data_img, data_word, labels) in enumerate(dataloader):
-            if i%640==0: print(i,'gotovo')
+            #if(i%640==0): print(i)
             with torch.no_grad():
-                newcls = np.zeros((batch_size,))
-                for j,data_vector in enumerate(data_word):
-                    newcls[j] = model_uns(data_vector) 
-                newcls = newcls >= thresh
+                #newcls = np.zeros((batch_size,))
+                #for j,data_vector in enumerate(data_word):
+                #    newcls[j] = model_uns(data_vector) 
+                #newcls = newcls >= thresh
+                newcls = model_uns(data_word)>=thresh
+                newcls = newcls.numpy()
 
                 unsup_dists = spatial.distance.cdist(data_word, uns_means, metric='euclidean')
                 unsup_best = np.argmin(unsup_dists,1)
@@ -93,6 +94,7 @@ if __name__=='__main__':
                 correct_uns += np.sum(np.equal(preds[uns_inds], labels[uns_inds]))
                 all_sup += np.sum(sup_inds)
                 all_uns += np.sum(uns_inds)
+                
         
         acc_all.append(correct/all)
         acc_sup.append(correct_sup/all_sup)
