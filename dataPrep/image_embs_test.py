@@ -25,13 +25,13 @@ if __name__ == '__main__':
     del(y)
 
     # scale train and test data
-    clf=StandardScaler(copy=False)
-    clf.fit(X=x_train)
-    x_train=clf.transform(x_train)
-    x_test = clf.transform(x_test)
-    
+    scaler=StandardScaler(copy=False)
+    scaler.fit(X=x_train)
+    x_train=scaler.transform(x_train)
+    x_test = scaler.transform(x_test)
+    '''
     clf = SGDClassifier(penalty='l2', loss='hinge', learning_rate='adaptive', eta0=1, early_stopping = False, 
-        alpha=0.005, tol=1e-4, fit_intercept = True, random_state=42, max_iter=1000, verbose=1) 
+        alpha=0.007, tol=5e-5, fit_intercept = True, random_state=42, max_iter=1000, verbose=1) 
 
     # 86 train 76 test sa 0.005
 
@@ -47,8 +47,25 @@ if __name__ == '__main__':
     y_pred = clf.predict(x_test)
     accuracy = accuracy_score(y_test, y_pred)
     print(classification_report(y_true=y_test,y_pred=y_pred))
-    print("test acc:",accuracy)
-    
+    print("val acc:",accuracy)
+    '''
     # save trained svm model
     img_model_filename = "svm_image_emb_model.pkl"
-    data_utils.save_data(img_model_filename, clf)
+    #data_utils.save_data(img_model_filename, clf)
+    
+    # test set
+
+    # load data
+    path = config['DATASET']['IMAGES']['imgs_10cls_ftrs_test_path'] 
+    x = data_utils.load_data(path)
+    x=scaler.transform(x)
+    
+    path_labels = os.path.join(config['DATASET']['IMAGES']['imgs_path'],"test_labels.pkl")
+    y = data_utils.load_data(path_labels)
+    
+    clf = data_utils.load_data(img_model_filename)
+
+    y_pred = clf.predict(x)
+    accuracy = accuracy_score(y, y_pred)
+    print(classification_report(y_true=y,y_pred=y_pred,digits=4))
+    print("test acc:",accuracy)

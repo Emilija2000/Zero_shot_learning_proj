@@ -51,29 +51,29 @@ if __name__ == '__main__':
     len_test = test_dataset.__len__()
     train_ftrs = torch.zeros((len_train,out_features))
     test_ftrs = torch.zeros((len_test,out_features))
-    
+    '''
     # extract feature vectors in the word vector space
     print('Extracting train feature vectors...')
     for i, (data, labels) in enumerate(train_dataloader):
         out = model(data)
         train_ftrs[i*batch_size:min((i+1)*batch_size, len_train), :] = out
-    
+    '''
     print('Extracting test feature vectors...')
     for i, (data, labels) in enumerate(test_dataloader):
         out = model(data)
         test_ftrs[i*batch_size:min((i+1)*batch_size, len_test), :] = out
 
-
+    '''
     # save extracted features
     print("Saving feature vectors...")
     file_name = config['DATASET']['SEMANTIC']['train_ftrs_path']
     data_utils.save_data(file_name, train_ftrs.detach().numpy())
-    
+    '''
     file_name = config['DATASET']['SEMANTIC']['test_ftrs_path']
     #file_name = config['DATASET']['SEMANTIC']['test_ftrs_unseen_path']
     data_utils.save_data(file_name, test_ftrs.detach().numpy())
     
-    
+    '''
     # save labels without the unseen classes
     file_name = config['DATASET']['SEMANTIC']['train_labels_path']
     data_utils.save_data(file_name, train_dataset.img_labels)
@@ -105,4 +105,4 @@ if __name__ == '__main__':
     test_dataset = ImgWordEmbDataset(img_ftrs_path, img_ftrs_filename, 0, img_label_path, word_ftrs_path, classes, unseen, test=True)
     file_name = config['DATASET']['IMAGES']['imgs_10cls_ftrs_test_path']
     data_utils.save_data(file_name, test_dataset.img_data)
-    
+    '''

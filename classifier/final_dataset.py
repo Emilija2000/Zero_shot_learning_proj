@@ -20,8 +20,8 @@ class SemanticSpaceDataset(Dataset):
         self.labels = self.labels.astype(int)
 
         # match image label and word representation
-        word_data = data_utils.load_data(word_emb_path).astype(np.float32)
-        self.word_emb_labels = word_data[self.labels,:]
+        self.word_data = data_utils.load_data(word_emb_path).astype(np.float32)
+        self.word_emb_labels = self.word_data[self.labels,:]
 
         #self.labels = torch.from_numpy(self.labels).to(torch.long)
 

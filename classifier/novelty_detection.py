@@ -2,6 +2,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from sklearn.svm import OneClassSVM
+
 class Gaussian(nn.Module):
     def __init__(self):
         super(Gaussian, self).__init__()
@@ -35,11 +37,17 @@ class Gaussian(nn.Module):
 
     def find_thresholds(self, data, percents):
         out = self.forward(data)
-        out = torch.sort(out)[0]
+        out = torch.sort(out, descending=True)[0]
         
-        inds = percents * out.shape[0]
+        inds = np.round(percents * (out.shape[0]))
+        if(inds[-1] == out.shape[0]):
+            inds[-1] = inds[-1] - 1
+            ret = out[inds]
+            ret[-1] = ret[-1] + 1
+        else:
+            ret = out[inds]
 
-        return out[inds]
+        return ret
 
     def train(self, train_points, train_word_labels, random_sample=False,sample_size=5000):
         if random_sample:
@@ -67,6 +75,30 @@ class Gaussian(nn.Module):
 
         self.means = torch.from_numpy(np.array(means))
         self.sigmas= torch.from_numpy(np.array(sigmas))
+
+
+class OneClsSVM(nn.Module):
+    def __init__(self,kernel='rbf', gamma=0.001, nu=0.03):
+        super(OneClsSVM, self).__init__()
+        self.svm = OneClassSVM(kernel=kernel, gamma=gamma, nu=nu)
+
+    def forward(self, X):
+        scores = self.svm.score_samples(X)
+        return scores
+
+    def find_thresholds(self, data, percents):
+        ret = []
+        scores = self.svm.score_samples(data)
+
+        for perc in percents:
+            thresh = np.quantile(scores, perc)
+            ret.append(thresh)
+
+        ret = np.array(ret)
+        return ret
+
+    def train(self, train_points):
+        pred = self.svm.fit_predict(train_points)
 
 
 class LoOP(nn.Module):
@@ -171,8 +203,11 @@ if __name__=='__main__':
     #uns_clf = LoOP(dataset.data, k, Lambda,sample_size)
     #uns_clf.train()
 
-    uns_clf = Gaussian()
-    uns_clf.train(dataset.data,dataset.word_emb_labels)
+    #uns_clf = Gaussian()
+    #uns_clf.train(dataset.data,dataset.word_emb_labels)
+
+    uns_clf = OneClsSVM(kernel='rbf')
+    uns_clf.train(dataset.data)
 
     # load pretrained
     #uns_clf = torch.load(config['CLASSIFIER']['uns_model_path'])
@@ -187,14 +222,15 @@ if __name__=='__main__':
     word_embs_path = config['DATASET']['WORDS']['word_ftrs_path']
     dataset = SemanticSpaceDataset(test_data_path, test_labels_path, word_embs_path)
 
-    data = dataset[0:64][0]
-    print(dataset.get_label(dataset[0:64][1]),uns_clf(data))
-
-    X = torch.from_numpy(dataset.data)
-    threshs = uns_clf.find_thresholds(X, np.arange(0,1,0.1))
-    print(threshs)
+    #X = torch.from_numpy(dataset.data)
+    #threshs = uns_clf.find_thresholds(X, np.arange(0,1.1,0.1))
+    #print(threshs)
     
     data = dataset[1][0]
     data = data.reshape((1,data.shape[0]))
     print(dataset.get_label(dataset[1][1]),uns_clf(data))
+
+    data = dataset[0:64][0]
+    print(dataset.get_label(dataset[0:64][1]),uns_clf(data))
+
     

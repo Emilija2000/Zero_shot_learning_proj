@@ -20,12 +20,15 @@ if __name__=='__main__':
     # load dataset
      # to test projection into semantic space 
     #train_data_path = config['DATASET']['SEMANTIC']['train_ftrs_path']
-     # to train supervised image classifier based on image features
-    #train_data_path = config['DATASET']['IMAGES']['imgs_seen_ftrs_train_path']
     #train_labels_path = config['DATASET']['SEMANTIC']['train_labels_path']
-    train_data_path = config['DATASET']['IMAGES']['imgs_10cls_ftrs_train_path'] 
-    import os
-    train_labels_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"],"train_labels.pkl")
+     # to train supervised image classifier based on image features
+    train_data_path = config['DATASET']['IMAGES']['imgs_seen_ftrs_train_path']
+    train_labels_path = config['DATASET']['SEMANTIC']['train_labels_path']
+    # to train supervised 10cls classifier in image space
+    #train_data_path = config['DATASET']['IMAGES']['imgs_10cls_ftrs_train_path'] 
+    #import os
+    #train_labels_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"],"train_labels.pkl")
+
     word_embs_path = config['DATASET']['WORDS']['word_ftrs_path']
 
     dataset = SemanticSpaceDataset(train_data_path, train_labels_path, word_embs_path)
@@ -47,8 +50,8 @@ if __name__=='__main__':
     # initialize the model
     #in_features = config['WORD_EMB']['ftrs_size'] # for semantic space vectors testing
     in_features = config['IMAGE_EMB']['ftrs_size'] # for image space vectors testing
-    #out_features = len(config['DATASET']['classes']) - len(config['DATASET']['unseen'])
-    out_features=len(config['DATASET']['classes'])
+    out_features = len(config['DATASET']['classes']) - len(config['DATASET']['unseen'])
+    #out_features=len(config['DATASET']['classes'])
     model = SupervisedModel(in_features,out_features)
 
     #file_name = config['CLASSIFIER']['model_path']
@@ -120,8 +123,16 @@ if __name__=='__main__':
                     optimizer.zero_grad()
                     out = model(data)
                     loss = loss_fcn(out, labels)
+
+                    l2_norm = torch.tensor(0.).to(device)
+                    for p in model.parameters():
+                        l2_norm+=torch.sum(torch.multiply(p,p))
+                    
+                    loss_nonreg = loss
+                    loss = loss + l2_norm*weight_decay
+
                     loss.backward()
-                    return loss
+                    return loss_nonreg
 
                 # main training step
                 if phase == 'train':
@@ -164,10 +175,14 @@ if __name__=='__main__':
     fig,ax = plt.subplots(1,2)
     ax[0].plot(train_loss,'b-')
     ax[0].plot(val_loss,'r-')
-    ax[0].set_title('Loss')
+    ax[0].set_xlabel('broj epohe')
+    ax[0].set_ylabel('kriterijumska funkcija')
+    ax[0].set_title('(a)')
     ax[1].plot(train_acc,'b-')
     ax[1].plot(val_acc,'r-')
-    ax[1].set_title('Accuracy')
+    ax[1].set_xlabel('broj epohe')
+    ax[1].set_ylabel('tacnost')
+    ax[1].set_title('(b)')
     plt.show()
 
     model.load_state_dict(best_model)

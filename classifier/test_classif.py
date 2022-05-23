@@ -10,7 +10,7 @@ from data_utils import load_config,save_data
 
 from final_dataset import AllFtrsDataset
 from supervised_model import SupervisedModel
-from novelty_detection import LoOP
+from novelty_detection import LoOP, Gaussian, OneClsSVM
 
 
 if __name__=='__main__':
@@ -48,11 +48,21 @@ if __name__=='__main__':
 
     # test for different thresholds for unsupervised classification
     thresh_num = config['CLASSIFIER']['thresholds_num']
-    thresholds = np.linspace(0,1,thresh_num)
+    thresholds_orig = np.linspace(0,1,thresh_num)
+
+    #loop
+    #thresholds = thresholds_orig
+    # gaussian 
+    #thresholds = model_uns.find_thresholds(torch.from_numpy(dataset.semantic), thresholds_orig)
+    # svm
+    thresholds = model_uns.find_thresholds(dataset.semantic, thresholds_orig[::-1])
 
     acc_all = []
     acc_sup = []
     acc_uns = []
+
+    #loop - actual percentage
+    perc_new = []
 
     for thresh in thresholds:
         correct = 0.0
@@ -63,15 +73,19 @@ if __name__=='__main__':
         all_uns = 0.0
         predictions = []  
         
+        num_new = 0
+
         for i,(data_img, data_word, labels) in enumerate(dataloader):
-            #if(i%640==0): print(i)
             with torch.no_grad():
-                #newcls = np.zeros((batch_size,))
-                #for j,data_vector in enumerate(data_word):
-                #    newcls[j] = model_uns(data_vector) 
-                #newcls = newcls >= thresh
-                newcls = model_uns(data_word)>=thresh
-                newcls = newcls.numpy()
+                # LOop
+                #newcls = model_uns(data_word)>=thresh
+                # Gauss or SVM: reversed
+                newcls = model_uns(data_word)<thresh
+
+                #Loop or Gauss
+                #newcls = newcls.numpy()
+
+                num_new += np.sum(newcls).item()
 
                 unsup_dists = spatial.distance.cdist(data_word, uns_means, metric='euclidean')
                 unsup_best = np.argmin(unsup_dists,1)
@@ -96,20 +110,25 @@ if __name__=='__main__':
                 all_uns += np.sum(uns_inds)
                 
         
+        perc_new.append(num_new/dataset.__len__())
+        print(perc_new[-1])
+        
         acc_all.append(correct/all)
         acc_sup.append(correct_sup/all_sup)
         acc_uns.append(correct_uns/all_uns)
         print('Thresh',thresh,': ',acc_all[-1], acc_sup[-1], acc_uns[-1])
 
-    save_data('loop_accs.pkl', (acc_all,acc_sup,acc_uns))
+    save_data('svm_accs.pkl', (acc_all,acc_sup,acc_uns))
+    #save_data('loop_perc.pkl',perc_new)
 
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.plot(thresholds,acc_sup,'bo')
-    plt.plot(thresholds,acc_uns,'rx')
-    plt.plot(thresholds,acc_all,'g*')
-    plt.xlabel('granica prepoznavanja novih klasa')
+    plt.plot(thresholds_orig,acc_sup,'bo')
+    plt.plot(thresholds_orig,acc_uns,'rx')
+    plt.plot(thresholds_orig,acc_all,'g*')
+    #plt.xlabel('granica prepoznavanja novih klasa')
+    plt.xlabel('procenat podataka klasifikovanih u poznate klase')
     plt.ylabel('tacnost')
     plt.legend(['poznate klase','nove klase','ukupna tacnost'])
     plt.show()

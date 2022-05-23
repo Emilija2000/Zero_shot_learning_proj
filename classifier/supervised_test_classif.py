@@ -19,10 +19,10 @@ if __name__=='__main__':
 
     # load dataset
     #test_data_path = config['DATASET']['SEMANTIC']['test_ftrs_unseen_path']
-    #test_data_path = config['DATASET']['IMAGES']['imgs_seen_ftrs_test_path']
-    #test_labels_path = config['DATASET']['SEMANTIC']['test_labels_unseen_path']
-    test_data_path = config['DATASET']['IMAGES']['imgs_10cls_ftrs_test_path'] 
-    test_labels_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"],"test_labels.pkl")
+    test_data_path = config['DATASET']['IMAGES']['imgs_seen_ftrs_test_path']
+    test_labels_path = config['DATASET']['SEMANTIC']['test_labels_unseen_path']
+    #test_data_path = config['DATASET']['IMAGES']['imgs_10cls_ftrs_test_path'] 
+    #test_labels_path = os.path.join(config['DATASET']['IMAGES']["imgs_path"],"test_labels.pkl")
     
     word_embs_path = config['DATASET']['WORDS']['word_ftrs_path']
 
@@ -34,8 +34,8 @@ if __name__=='__main__':
     # initialize the model
     #in_features = config['WORD_EMB']['ftrs_size']
     in_features = config['IMAGE_EMB']['ftrs_size']
-    #out_features = len(config['DATASET']['classes']) - len(config['DATASET']['unseen'])
-    out_features = len(config['DATASET']['classes']) 
+    out_features = len(config['DATASET']['classes']) - len(config['DATASET']['unseen'])
+    #out_features = len(config['DATASET']['classes']) 
     model = SupervisedModel(in_features,out_features)
     file_name = config['CLASSIFIER']['model_path']
     model.load_state_dict(torch.load(file_name))
@@ -55,7 +55,7 @@ if __name__=='__main__':
 
 
     from sklearn.metrics import classification_report
-    print(classification_report(dataset.labels, dataset.get_label(predictions)))
+    print(classification_report(dataset.labels, dataset.get_label(predictions), digits=4))
     
     
     
