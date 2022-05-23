@@ -30,7 +30,17 @@
             "test_labels_unseen_path": "..\\dataset\\semanticData\\test_labels_unseen.pkl"
         },
         "classes":["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
-        "unseen":["cat","truck"]
+        "unseen":["cat","truck"],
+        "TEST_DIF_ZS":{
+            "combinations": [[1,9],[3,5],[0,1],[1,4],[4,8],[3,9]],
+            "test_ftrs": [
+                "..\\dataset\\semanticData\\test_ftrs_autotruck.pkl",
+                "..\\dataset\\semanticData\\test_ftrs_catdog.pkl",
+                "..\\dataset\\semanticData\\test_ftrs_autoplane.pkl",
+                "..\\dataset\\semanticData\\test_ftrs_autodeer.pkl",
+                "..\\dataset\\semanticData\\test_ftrs_deership.pkl",
+                "..\\dataset\\semanticData\\test_ftrs.pkl"]
+        }
     },
     "IMAGE_EMB":{
         "encoders":{
@@ -67,14 +77,14 @@
     "CLASSIFIER":{
         "random_seed": 42,
         "batch_size": 64,
-        "lr": 0.0002,
-        "weight_decay":0.00005,
-        "num_epochs":2500,
+        "lr": 0.0003,
+        "weight_decay":0.0001,
+        "num_epochs":2000,
         "model_path": "supervised_classif_imgemb_dict.pkl",
         "uns_k": 20,
         "uns_lambda":3,
-        "uns_sample_size":1000,
-        "uns_model_path":"unsupervised_classif.pkl",
-        "thresholds_num":10
+        "uns_sample_size":5000,
+        "uns_model_path":"unsupervised_classif_svm.pkl",
+        "thresholds_num":11
     }
 }
